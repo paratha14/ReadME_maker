@@ -6,34 +6,55 @@ from langchain_core.output_parsers import StrOutputParser
 import asyncio
 from dotenv import load_dotenv
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 app= FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-async def fetch_data(owner: str, repo: str, branch: str = "main"):
-    url_tree= f"https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1"
-    url_language= f"https://api.github.com/repos/{owner}/{repo}/languages"
+async def fetch_data(owner: str, repo: str):
+    repo_url = f"https://api.github.com/repos/{owner}/{repo}"
 
     async with httpx.AsyncClient() as client:
-        response_tree= await client.get(url_tree)
-        response_languages= await client.get(url_language)
-    
+        repo_response = await client.get(repo_url)
+
+    if repo_response.status_code != 200:
+        raise HTTPException(status_code=repo_response.status_code,
+                            detail="Failed to fetch repository info")
+
+    repo_data = repo_response.json()
+    default_branch = repo_data.get("default_branch", "main")
+
+    url_tree = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1"
+    url_language = f"https://api.github.com/repos/{owner}/{repo}/languages"
+
+    async with httpx.AsyncClient() as client:
+        response_tree = await client.get(url_tree)
+        response_languages = await client.get(url_language)
+
     if response_tree.status_code != 200:
-        raise HTTPException(f"Failed to fetch tree data: {response_tree.status_code}")
-    
-    data= response_tree.json()
-    files = [item['path'] for item in data.get('tree', [])]
+        raise HTTPException(status_code=response_tree.status_code,
+                            detail="Failed to fetch tree data")
+
+    files = [item['path'] for item in response_tree.json().get('tree', [])]
 
     if response_languages.status_code != 200:
-        raise HTTPException(f"Failed to fetch language data: {response_languages.status_code}")
+        raise HTTPException(status_code=response_languages.status_code,
+                            detail="Failed to fetch language data")
+
     languages = response_languages.json()
-    
-    content={}
-    content['all_files']= files
-    content['languages_used']= languages
-    
-    return content
+
+    return {
+        "all_files": files,
+        "languages_used": languages
+    }
 
 async def LLM_pass(metadata: dict, repo_name: str):
     api_key= os.getenv("GOOGLE_API_KEY")
@@ -59,20 +80,19 @@ async def LLM_pass(metadata: dict, repo_name: str):
     })
     return result
 
-async def main(owner: str, repo: str, branch: str = "main"):
-    metadata= await fetch_data(owner, repo, branch)
+async def main(owner: str, repo: str):
+    metadata= await fetch_data(owner, repo)
     readme_content= await LLM_pass(metadata, repo)
     return readme_content
 
 
-@app.get("/generate_readme")
-async def generate_readme(owner: str = None, repo: str = None, branch: str = "main"):
-    
+@app.get("/generate-readme")
+async def generate_readme(owner: str, repo: str):
+
     if not owner or not repo:
-        raise HTTPException(status_code=400, detail="Missing 'owner' or 'repo' query parameters.")
-    
-    try:
-        readme_content= await main(owner, repo, branch)
-        return {"readme_content": readme_content}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400,
+                            detail="Missing owner or repo")
+
+    readme_content = await main(owner, repo)
+
+    return {"readme": readme_content}
