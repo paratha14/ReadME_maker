@@ -1,0 +1,5 @@
+.env
+venv
+fetch.py
+__pycache__
+.gitignore
