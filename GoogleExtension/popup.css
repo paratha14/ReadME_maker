@@ -103,3 +103,10 @@ pre {
   from {background-color: #5c645e;}
   to {background-color: #5e8169;}
 }
+p{
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  padding: 20px;
+  border-radius: 18px;
+}
