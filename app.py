@@ -22,8 +22,13 @@ app.add_middleware(
 async def fetch_data(owner: str, repo: str):
     repo_url = f"https://api.github.com/repos/{owner}/{repo}"
 
+    headers = {
+    "Authorization": f"Bearer {os.getenv('GITHUB_TOKEN')}",
+    "Accept": "application/vnd.github+json"
+    }
+
     async with httpx.AsyncClient() as client:
-        repo_response = await client.get(repo_url)
+        repo_response = await client.get(repo_url, headers=headers)
 
     if repo_response.status_code != 200:
         raise HTTPException(status_code=repo_response.status_code,
@@ -36,8 +41,8 @@ async def fetch_data(owner: str, repo: str):
     url_language = f"https://api.github.com/repos/{owner}/{repo}/languages"
 
     async with httpx.AsyncClient() as client:
-        response_tree = await client.get(url_tree)
-        response_languages = await client.get(url_language)
+        response_tree = await client.get(url_tree, headers=headers)
+        response_languages = await client.get(url_language, headers=headers)
 
     if response_tree.status_code != 200:
         raise HTTPException(status_code=response_tree.status_code,
