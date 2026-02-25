@@ -21,7 +21,7 @@ document.getElementById('generator').addEventListener('click', async () => {
   contentDiv.innerHTML = '<p class="loading">Analyzing file tree & Crafting README...</p>';
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/generate-readme?owner=${owner}&repo=${repo}`);
+    const response = await fetch(`https://readme-maker-s618.onrender.com/generate-readme?owner=${owner}&repo=${repo}`);
     
     if (!response.ok) throw new Error('Failed to fetch from backend');
     
