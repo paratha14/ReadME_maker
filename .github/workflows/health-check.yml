@@ -1,0 +1,36 @@
+name: Backend Health Check
+
+on:
+  # Run every 20 minutes
+  schedule:
+    - cron: '*/20 * * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check Backend Health
+        run: |
+          echo "🔍 Checking backend health..."
+          
+          HEALTH_URL="${{ secrets.BACKEND_HEALTH_URL }}"
+          
+          
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL")
+          
+          echo "Response Code: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "✅ Backend is healthy!"
+            exit 0
+          else
+            echo "❌ Backend health check failed with status code: $RESPONSE"
+            exit 1
+          fi
