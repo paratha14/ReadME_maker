@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Crazy README Generator",
+  "name": "PurrFectMD",
   "version": "1.0",
-  "description": "Instantly generate cool READMEs for any GitHub repository.",
+  "description": "Fast, easy README generator for developers. Create polished markdown documentation with customizable templates.",
   "action": {
     "default_popup": "popup.html"
   },
-  "permissions": [
-    "activeTab"
-  ],
+  "permissions": [],
   "host_permissions": [
-  "https://readme-maker-s618.onrender.com/*"
-]
+    "https://readme-maker-s618.onrender.com/*"
+  ],
+  "icons": {
+    "16": "cat.png"
+  }
 }
