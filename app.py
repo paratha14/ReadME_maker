@@ -256,3 +256,7 @@ async def generate_readme(owner: str, repo: str):
     readme_content = await main(owner, repo)
 
     return {"readme": readme_content}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
