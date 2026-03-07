@@ -2,19 +2,24 @@ document.getElementById('generator').addEventListener('click', async () => {
   const contentDiv = document.getElementById('content');
   const btn = document.getElementById('generator');
 
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const url = tab.url;
+  let [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  const url = tab?.url;
 
-  const githubRegex = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/;
-  const match = url.match(githubRegex);
-
-  if (!match) {
-    contentDiv.innerHTML = '<p style="color: red;">Please navigate to a GitHub repository page.</p>';
+  if (!url) {
+    contentDiv.innerHTML = "<p style='color: red;'>Could not access the current tab URL.</p>";
     return;
   }
 
-  const owner = match[1];
-  const repo = match[2].replace(".git", ""); 
+  const githubRegex = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/;
+  const matchResult = url.match(githubRegex);
+
+if (!matchResult) {
+  contentDiv.innerHTML = "<p style='color: red;'>Please navigate to a GitHub repository page.</p>";
+  return;
+}
+
+const owner = matchResult[1];
+const repo = matchResult[2].replace(".git", "");
 
   btn.disabled = true;
   btn.innerText = 'Generating... (this might take a few seconds)';
